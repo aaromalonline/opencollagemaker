@@ -1,0 +1,488 @@
+\documentclass[a4paper]{article}
+
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[margin=1.2in]{geometry}
+\usepackage{minted}
+\usepackage{svg}
+\usepackage{hyperref}
+
+\usepackage{titlesec}
+\titlespacing*{\section}{0pt}{3.5ex plus 1ex minus .2ex}{2.6ex plus .2ex}
+
+\newgeometry{margin=1in}
+\begin{document}
+\begin{titlepage}
+    \centering
+    \vspace*{1in}
+    
+    {\Large \textbf{Python Project 3:}} \\
+    \vspace{0.4in}
+    {\huge \textbf{OpenCollage Maker}} \\
+    \vspace{0.6in}
+    \includesvg[width=0.4\textwidth]{cusat.svg} \\
+    \vspace{0.8in}
+    
+    {\large Submitted by} \\
+    \vspace{0.2in}
+    {\large \underline{Group - 5}} \\
+    \vspace{0.2in}
+    
+    % This table centers the block of names but left-aligns the text within it
+    {\large
+    \begin{tabular}{rl}
+         2. & \textbf{Aaromal A (24101880)} \\
+        15. & \textbf{Alfin Francis (24101006)} \\
+        33. & \textbf{Devanarayanan C R (24101115)} \\
+        39. & \textbf{G Govardan (24102775)} \\
+        49. & \textbf{Ivana Anto (24101562)}
+    \end{tabular}}
+    
+    \vfill
+\end{titlepage}
+\restoregeometry % Returns margins to 1.2in for the rest of the report
+\newpage
+
+\title{OpenCollage Maker Project Report}
+\author{}
+\date{17 March, 2026}
+\maketitle
+
+\section*{Aim}
+Create a program that allows users to upload multiple images and automatically resize and arrange them into a grid to form a collage. The user can choose the grid size, and the images will be resized and aligned accordingly in a responsive GUI interface.
+\vspace{10pt}
+
+\section*{Tools \& Modules}
+The project is built using a robust stack of Python libraries:
+\begin{itemize}
+    \item \textbf{OpenCV (cv2):} Handles high-speed image transformations, rotations, and color space management.
+    \item \textbf{NumPy:} Powers the canvas as a multi-dimensional array for pixel-perfect precision.
+    \item \textbf{Tkinter:} Drives the GUI, utilizing ttk for modern styling and colorchooser for theme customization.
+    \item \textbf{OS \& Base Modules:} Manages file I/O and path operations for batch image loading.
+\end{itemize}
+
+
+\vspace{10pt}
+\section*{Image Processing Pipeline}
+When you generate or modify a collage, each image slot undergoes the following automated pipeline:
+\begin{enumerate}
+    \item \textbf{Normalization:} Images are opened and converted to a uniform BGR color space to ensure consistent rendering.
+    \item \textbf{Affine Scaling:} Initial per-image scale factors are applied using \textbf{Lanczos resampling} to preserve sharpness.
+    \item \textbf{Rotation:} Images are rotated using an Affine matrix. The bounding box dynamically adjusts to prevent clipping.
+    \item \textbf{Smart Cover-Crop:} To prevent letterboxing or stretching, the system computes the optimal scale to fill the cell entirely and then center-crops to the exact target dimensions.
+    \item \textbf{Composition:} Processed segments are stitched onto the master NumPy canvas with user-defined gutters and margins.
+\end{enumerate}
+
+\vspace{10pt}
+\section*{Functional Overview}
+
+\subsection*{1. Dynamic Layout \& Proportions}
+\begin{itemize}
+    \item \textbf{Grid Control:} Spinboxes to adjust the number of \textbf{Rows} and \textbf{Columns} (up to a 10x10 grid).
+    \item \textbf{Aspect Ratio Engine:} A dropdown to switch between standard photography and cinematic ratios (\textbf{1:1, 4:3, 3:4, 16:9}).
+    \item \textbf{Smart Center-Cropping:} Automatically calculates the optimal crop for every uploaded image so they fill the grid cell perfectly without stretching.
+\end{itemize}
+
+\subsection*{2. Live Preview \& Real-Time Feedback}
+\begin{itemize}
+    \item \textbf{Variable Tracing:} Uses trace\_add logic on all UI variables (Grid, Sliders, Title) to trigger an instant re-render the moment a value changes.
+    \item \textbf{Zero-Latency Updates:} Every micro-adjustment to spacing, margins, or text is reflected immediately in the preview window.
+    \item \textbf{Adaptive Text Contrast:} The caption color automatically flips between \textbf{Black} and \textbf{White} based on the background color's luminance.
+\end{itemize}
+
+\subsection*{3. Responsive UI \& Auto-Scaling}
+\begin{itemize}
+    \item \textbf{Dynamic Canvas Fitting:} The preview automatically calculates the available window space (winfo\_width/height) and scales the collage to fit perfectly.
+    \item \textbf{Window Resize Support:} The update\_idletasks logic ensures the collage scales smoothly when resizing the application window.
+\end{itemize}
+
+\subsection*{4. High-Precision Drag \& Drop}
+\begin{itemize}
+    \item \textbf{Canvas-Layered Dragging:} A "ghost" thumbnail follows your cursor with 1:1 precision, decoupled from the background to prevent lag.
+    \item \textbf{Target Highlighting:} A blue dashed box appears over the destination slot during a drag, showing exactly where the swap will occur.
+    \item \textbf{Automatic Swapping:} Releasing an image over another instantly swaps their positions in the sequence.
+\end{itemize}
+
+\subsection*{5. Contextual Image Editing (Right-Click)}
+\begin{itemize}
+    \item \textbf{Surgical Position Control:} Shift images \textbf{Left, Right, Up, or Down} via a context menu.
+    \item \textbf{Independent Rotation:} Rotate a single selected image by \textbf{90° clockwise} without affecting global settings.
+    \item \textbf{Targeted Removal:} A \textbf{"Remove Image"} option that deletes the specific photo and collapses the grid to fill the gap.
+\end{itemize}
+
+\subsection*{6. Professional Aesthetics \& Handling}
+\begin{itemize}
+    \item \textbf{Lanczos4 Resampling:} High-quality interpolation ensures the final exported file remains sharp.
+    \item \textbf{Modern Footer UI:} Icons and labels are baseline-aligned for a clean, mobile-app-inspired aesthetic.
+    \item \textbf{System Integration:} Standard file dialogs for batch adding and saving, plus a dedicated system color picker for the background.
+\end{itemize}
+
+\vspace{10pt}
+\section*{GUI Overview}
+ Driven by the Tkinter module with modern ttk styling, the interface is designed to maximize screen real estate and ease of use.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{interface.jpeg}
+    \caption{OpenCollage Maker Main Interface showcasing the live preview, grid, and layout controls.}
+    \label{fig:interface}
+\end{figure}
+
+\vspace*{4pt}
+
+\begin{itemize}
+    \item \textbf{Live Preview (Main Canvas) :} A responsive tk.Canvas that displays a real-time downscaled thumbnail of your work.
+    \item \textbf{Main Control Menu (Footer):} A sleek, baseline-aligned footer containing all tools. This layout keeps controls within reach while you focus on the preview.
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{footer.png}
+    \label{fig:interface}
+    \end{figure}
+    
+    \item \textbf{Contextual Menu (Right-Click):} A right-click menu system that allows for surgical, per-image edits without cluttering the main screen.
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\textwidth]{ctxtmenu.png}
+    \label{fig:interface}
+    \end{figure}
+
+\end{itemize}
+
+\vspace{10pt}
+\section*{Source Code}
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize, linenos]{python}
+import cv2
+import numpy as np
+import tkinter as tk
+from tkinter import filedialog, ttk, Menu, colorchooser
+import os
+
+class OpenCollageMaker(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("OpenCollage Maker")
+        self.geometry("1200x950")
+        self.configure(bg="#f5f5f7")
+        
+        self.images = [] 
+        self.result_bgr = None
+        self.bg_color = (255, 255, 255) 
+        self.ratios = {
+            "1:1 Square": (1, 1),
+            "4:3 Landscape": (4, 3),
+            "3:4 Portrait": (3, 4),
+            "16:9 Cinematic": (16, 9)
+        }
+        
+        self.drag_idx = None
+        self.right_clicked_idx = None
+        self.image_rects = [] 
+        
+        self._setup_ui()
+        self._create_context_menu()
+
+    def _setup_ui(self):
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+        
+        self.canvas = tk.Canvas(self, bg="#f5f5f7", highlightthickness=0, cursor="arrow")
+        self.canvas.grid(row=0, column=0, sticky="nsew", pady=20)
+        
+        # Interaction Bindings
+        self.canvas.bind("<ButtonPress-1>", self.on_drag_start)
+        self.canvas.bind("<B1-Motion>", self.on_drag_motion)
+        self.canvas.bind("<ButtonRelease-1>", self.on_drag_stop)
+        self.canvas.bind("<Button-3>", self.show_context_menu)
+        # Auto-close menu on left click
+        self.canvas.bind("<Button-1>", self.close_menu, add="+")
+
+        footer = ttk.Frame(self, padding=15, style="White.TFrame")
+        footer.grid(row=1, column=0, sticky="ew")
+        
+        style = ttk.Style()
+        style.configure("White.TFrame", background="#ffffff")
+        style.configure("Tool.TLabel", background="#ffffff", font=('Segoe UI', 8, 'bold'), foreground="#888")
+
+        tool_hub = ttk.Frame(footer, style="White.TFrame")
+        tool_hub.pack(expand=True)
+
+        def create_unit(label):
+            u = ttk.Frame(tool_hub, style="White.TFrame")
+            u.pack(side="left", padx=12, anchor="s") 
+            c = ttk.Frame(u, style="White.TFrame")
+            c.pack(side="top", pady=(0, 4)) 
+            l = ttk.Label(u, text=label, style="Tool.TLabel")
+            l.pack(side="top", anchor="center")
+            return c
+
+        # 1. Grid Controls
+        self.rows_var, self.cols_var = tk.IntVar(value=2), tk.IntVar(value=2)
+        grid_c = create_unit("GRID")
+        for v in [self.rows_var, self.cols_var]:
+            v.trace_add("write", lambda *a: self.generate())
+            tk.Spinbox(grid_c, from_=1, to=10, textvariable=v, width=3, bg="#f0f0f0", bd=0).pack(side="left", padx=2)
+
+        # 2. Aspect Ratio Selector
+        ratio_c = create_unit("RATIO")
+        self.ratio_var = tk.StringVar(value="1:1 Square")
+        ratio_dd = ttk.Combobox(ratio_c, textvariable=self.ratio_var, values=list(self.ratios.keys()), state="readonly", width=12)
+        ratio_dd.pack()
+        ratio_dd.bind("<<ComboboxSelected>>", lambda e: self.generate())
+
+        # 3. Spacing Sliders
+        slider_cfg = {"bg": "white", "troughcolor": "#e0e0e0", "showvalue": False, "highlightthickness": 0, "sliderlength": 15}
+        self.inner_var = tk.IntVar(value=10)
+        tk.Scale(create_unit("INNER"), from_=0, to=50, orient="horizontal", variable=self.inner_var, command=lambda x: self.generate(), length=70, **slider_cfg).pack()
+
+        self.outer_var = tk.IntVar(value=20)
+        tk.Scale(create_unit("MARGIN"), from_=0, to=100, orient="horizontal", variable=self.outer_var, command=lambda x: self.generate(), length=70, **slider_cfg).pack()
+
+        # 4. BG Color Swatch
+        color_c = create_unit("BG")
+        color_frame = tk.Frame(color_c, width=22, height=22, bg="#cccccc", bd=1)
+        color_frame.pack_propagate(False)
+        color_frame.pack(pady=2)
+        self.color_btn = tk.Button(color_frame, bg="white", relief="flat", command=self.pick_color, activebackground="#eeeeee", cursor="hand2")
+        self.color_btn.pack(fill="both", expand=True)
+
+        # 5. Title Entry
+        self.caption_var = tk.StringVar(value="MY COLLAGE")
+        self.caption_var.trace_add("write", lambda *a: self.generate())
+        tk.Entry(create_unit("TITLE"), textvariable=self.caption_var, width=12, bg="#f0f0f0", bd=0).pack(ipady=3)
+
+        # 6. Action Buttons
+        act_c = create_unit("FILE")
+        ttk.Button(act_c, text="Add", command=self.load_images).pack(side="left", padx=2)
+        ttk.Button(act_c, text="Clear", command=self.clear_all).pack(side="left", padx=2)
+        ttk.Button(act_c, text="Save", command=self.save_image).pack(side="left", padx=2)
+
+    def _create_context_menu(self):
+        self.menu = Menu(self, tearoff=0)
+        self.menu.add_command(label="Rotate 90°", command=self.rotate_selected)
+        self.menu.add_separator()
+        self.menu.add_command(label="Move Left", command=lambda: self.shift_index(-1))
+        self.menu.add_command(label="Move Right", command=lambda: self.shift_index(1))
+        self.menu.add_command(label="Move Up", command=lambda: self.shift_index(-self.cols_var.get()))
+        self.menu.add_command(label="Move Down", command=lambda: self.shift_index(self.cols_var.get()))
+        self.menu.add_separator()
+        self.menu.add_command(label="Remove Image", command=self.delete_selected, foreground="red")
+
+    def show_context_menu(self, event):
+        self.close_menu()
+        for i, (x1, y1, x2, y2) in enumerate(self.image_rects):
+            if x1 <= event.x <= x2 and y1 <= event.y <= y2 and i < len(self.images):
+                self.right_clicked_idx = i
+                self.menu.post(event.x_root, event.y_root)
+                return
+        self.right_clicked_idx = None
+
+    def close_menu(self, event=None):
+        self.menu.unpost()
+
+    def shift_index(self, delta):
+        if self.right_clicked_idx is not None:
+            new_idx = self.right_clicked_idx + delta
+            if 0 <= new_idx < len(self.images):
+                self.images[self.right_clicked_idx], self.images[new_idx] = \
+                    self.images[new_idx], self.images[self.right_clicked_idx]
+                self.generate()
+
+    def delete_selected(self):
+        if self.right_clicked_idx is not None:
+            self.images.pop(self.right_clicked_idx)
+            self.generate()
+
+    def rotate_selected(self):
+        if self.right_clicked_idx is not None:
+            self.images[self.right_clicked_idx] = cv2.rotate(self.images[self.right_clicked_idx], cv2.ROTATE_90_CLOCKWISE)
+            self.generate()
+
+    def clear_all(self):
+        self.images = []
+        self.result_bgr = None
+        self.canvas.delete("all")
+        self.generate()
+
+    def pick_color(self):
+        color = colorchooser.askcolor(title="Select Background Color")
+        if color[1]: 
+            self.color_btn.config(bg=color[1])
+            r, g, b = [int(color[1][i:i+2], 16) for i in (1, 3, 5)]
+            self.bg_color = (b, g, r) 
+            self.generate()
+
+    def center_crop_to_ratio(self, img, target_w, target_h):
+        h, w = img.shape[:2]
+        target_aspect = target_w / target_h
+        current_aspect = w / h
+        if current_aspect > target_aspect:
+            new_w = int(h * target_aspect)
+            offset = (w - new_w) // 2
+            img = img[:, offset:offset+new_w]
+        else:
+            new_h = int(w / target_aspect)
+            offset = (h - new_h) // 2
+            img = img[offset:offset+new_h, :]
+        return cv2.resize(img, (target_w, target_h), interpolation=cv2.INTER_LANCZOS4)
+
+    def generate(self):
+        if not self.images: 
+            self.canvas.delete("all")
+            return
+        try:
+            r, c = self.rows_var.get(), self.cols_var.get()
+            base_dim = 450
+            rw, rh = self.ratios[self.ratio_var.get()]
+            cell_w, cell_h = int(base_dim * rw), int(base_dim * rh)
+            inner, outer = self.inner_var.get(), self.outer_var.get()
+            cap = self.caption_var.get().strip()
+            f_h = 120 if cap else outer
+            
+            canvas_w = (outer * 2) + (c * cell_w) + ((c - 1) * inner)
+            canvas_h = outer + (r * cell_h) + ((r - 1) * inner) + f_h
+            canvas_bgr = np.full((canvas_h, canvas_w, 3), self.bg_color, dtype=np.uint8)
+            raw_rects = []
+
+            for i in range(min(len(self.images), r * c)):
+                idx_r, idx_c = divmod(i, c)
+                img = self.center_crop_to_ratio(self.images[i].copy(), cell_w, cell_h)
+                y = outer + idx_r * (cell_h + inner)
+                x = outer + idx_c * (cell_w + inner)
+                canvas_bgr[y:y+cell_h, x:x+cell_w] = img
+                raw_rects.append((x, y, x + cell_w, y + cell_h))
+
+            if cap:
+                font = cv2.FONT_HERSHEY_DUPLEX
+                tw = cv2.getTextSize(cap, font, 1.5, 2)[0][0]
+                lum = 0.299*self.bg_color[2] + 0.587*self.bg_color[1] + 0.114*self.bg_color[0]
+                t_color = (255, 255, 255) if lum < 128 else (60, 60, 60)
+                cv2.putText(canvas_bgr, cap, ((canvas_w - tw)//2, canvas_h - 50), font, 1.5, t_color, 2, cv2.LINE_AA)
+
+            self.result_bgr = canvas_bgr
+            self._render_to_canvas(canvas_bgr, raw_rects)
+        except: pass
+
+    def _render_to_canvas(self, bgr_img, raw_rects):
+        h, w = bgr_img.shape[:2]
+        self.update_idletasks()
+        win_w, win_h = self.canvas.winfo_width(), self.canvas.winfo_height()
+        scale = min(win_w / w, win_h / h) * 0.92
+        nw, nh = int(w * scale), int(h * scale)
+        rgb = cv2.cvtColor(cv2.resize(bgr_img, (nw, nh)), cv2.COLOR_BGR2RGB)
+        ppm = f'P6 {nw} {nh} 255\n'.encode() + rgb.tobytes()
+        self.preview_tk = tk.PhotoImage(data=ppm, format='PPM')
+        self.canvas.delete("all")
+        ox, oy = (win_w - nw) // 2, (win_h - nh) // 2
+        self.canvas.create_image(win_w//2, win_h//2, image=self.preview_tk, tags="bg")
+        self.image_rects = [(int(x1*scale)+ox, int(y1*scale)+oy, int(x2*scale)+ox, int(y2*scale)+oy) for (x1,y1,x2,y2) in raw_rects]
+
+    def on_drag_start(self, event):
+        self.close_menu()
+        for i, (x1, y1, x2, y2) in enumerate(self.image_rects):
+            if x1 <= event.x <= x2 and y1 <= event.y <= y2 and i < len(self.images):
+                self.drag_idx = i
+                thumb = cv2.resize(self.images[i], (120, 120))
+                thumb_rgb = cv2.cvtColor(thumb, cv2.COLOR_BGR2RGB)
+                ppm = f'P6 120 120 255\n'.encode() + thumb_rgb.tobytes()
+                self.ghost_tk = tk.PhotoImage(data=ppm, format='PPM')
+                self.canvas.create_image(event.x, event.y, image=self.ghost_tk, tags="ghost")
+                break
+
+    def on_drag_motion(self, event):
+        if self.drag_idx is not None:
+            self.canvas.coords(self.canvas.find_withtag("ghost")[0], event.x, event.y)
+            self.canvas.delete("target")
+            for i, (x1, y1, x2, y2) in enumerate(self.image_rects):
+                if x1 <= event.x <= x2 and y1 <= event.y <= y2 and i != self.drag_idx:
+                    self.canvas.create_rectangle(x1, y1, x2, y2, outline="#0078d4", width=3, dash=(4,2), tags="target")
+
+    def on_drag_stop(self, event):
+        if self.drag_idx is not None:
+            drop_target = None
+            for i, (x1, y1, x2, y2) in enumerate(self.image_rects):
+                if x1 <= event.x <= x2 and y1 <= event.y <= y2: drop_target = i
+            self.canvas.delete("ghost", "target")
+            if drop_target is not None and drop_target != self.drag_idx and drop_target < len(self.images):
+                self.images[self.drag_idx], self.images[drop_target] = self.images[drop_target], self.images[self.drag_idx]
+                self.generate()
+        self.drag_idx = None
+
+    def load_images(self):
+        files = filedialog.askopenfilenames()
+        for f in files:
+            img = cv2.imread(f)
+            if img is not None: self.images.append(img)
+        self.generate()
+
+    def save_image(self):
+        if self.result_bgr is not None:
+            path = filedialog.asksaveasfilename(defaultextension=".jpg")
+            if path: cv2.imwrite(path, self.result_bgr)
+
+if __name__ == "__main__":
+    app = OpenCollageMaker()
+    app.mainloop()
+\end{minted}
+
+\vspace{10pt}
+\newpage
+\section*{Output Collages}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{1by2_portrait.jpg}
+    \caption{1x2 Grid, portrait aspect ratio}
+    \label{fig:dragndrop}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{2by2_lndscape.jpg}
+    \caption{2x2 Grid, Landscape aspect ratio}
+    \label{fig:clkcontext}
+\end{figure}
+
+\newpage
+\section*{Installation}
+Ensure you have Python 3.7+ installed. Follow these steps to get started:
+\begin{enumerate}
+    \item \textbf{Clone the repository:}
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize]{bash}
+git clone https://github.com/aaromalonline/opencollagemaker.git
+cd opencollagemaker
+\end{minted}
+    \item \textbf{Install required dependencies:}
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize]{bash}
+pip install -r ./requirements.txt
+\end{minted}
+    \item \textbf{Launch the Application:}
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize]{bash}
+python3 ./cmaker.py
+\end{minted}
+\end{enumerate}
+
+\section*{Usage}
+\textbf{1. Import Your Photos} Click the \textbf{Add} button to select multiple images. The \textbf{Live Preview} renders them immediately.
+
+\vspace{5pt}
+\noindent\textbf{2. Configure Your Layout}
+\begin{itemize}
+    \item Set your grid size and choose an aspect ratio.
+    \item Adjust \textbf{INNER} (gutters) and \textbf{MARGIN} (outer frame) sliders for the perfect spacing.
+\end{itemize}
+
+\vspace{5pt}
+\noindent\textbf{3. Arrange via Drag \& Drop} Click and hold any photo to drag it. Release over another slot to swap images.
+
+\vspace{5pt}
+\noindent\textbf{4. Surgical Edits (Right-Click)} Right-click any photo to \textbf{Rotate, Shift, or Remove} it from the layout.
+
+\vspace{5pt}
+\noindent\textbf{5. Style \& Save} Pick a custom \textbf{BG} color, enter a \textbf{TITLE}, and click \textbf{Save} to export your high-resolution masterpiece.
+
+\end{document}
