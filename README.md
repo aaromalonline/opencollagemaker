@@ -57,6 +57,15 @@ When you generate or modify a collage, each image slot undergoes the following a
 
 ---
 
+## 🖥 GUI Overview
+Driven by the **Tkinter** module with modern **ttk styling**, the interface is designed to maximize screen real estate and ease of use.
+
+* **Live Preview (Main Canvas):** A responsive `tk.Canvas` that displays a real-time downscaled thumbnail of your work.
+* **Main Control Menu (Footer):** A sleek, baseline-aligned footer containing all tools. This "mobile-first" layout keeps controls within reach while you focus on the preview.
+* **Contextual Menu (Right-Click):** A right-click menu system that allows for surgical, per-image edits without cluttering the main screen.
+
+---
+
 ## 📦 Installation
 
 Ensure you have Python 3.7+ installed. Follow these steps to get started:
